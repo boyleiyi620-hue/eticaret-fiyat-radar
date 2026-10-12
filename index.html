@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>Fiyat Radar | Akıllı fiyat takibi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d2924;
+      --muted: #78817a;
+      --line: #e6e9e2;
+      --paper: #f6f7f2;
+      --white: #fff;
+      --green: #176b50;
+      --green-dark: #124c3b;
+      --green-wash: #e6f2eb;
+      --lime: #d7ef75;
+      --red: #d85b4a;
+      --red-wash: #fff0ec;
+      --shadow: 0 12px 32px rgba(29, 41, 36, .055);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 'DM Sans', sans-serif; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .app { min-height: 100vh; }
+    .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; display: flex; width: 244px; flex-direction: column; border-right: 1px solid var(--line); background: #fbfcf8; padding: 26px 17px 19px; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 11px 34px; font: 800 18px/1 'Manrope', sans-serif; letter-spacing: -.3px; }
+    .brand-mark { display: grid; width: 33px; height: 33px; place-items: center; border-radius: 10px; background: var(--green); color: var(--lime); }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .nav-label { margin: 0 11px 9px; color: #9aa199; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .nav { display: grid; gap: 4px; }
+    .nav-item { display: flex; min-height: 43px; align-items: center; gap: 12px; border: 0; border-radius: 7px; background: transparent; color: #67736b; padding: 0 11px; text-align: left; cursor: pointer; }
+    .nav-item:hover { background: #f0f3ed; color: var(--ink); }
+    .nav-item.active { background: var(--green-wash); color: var(--green-dark); font-weight: 700; }
+    .nav-item svg { width: 17px; height: 17px; flex: none; }
+    .nav-count { display: grid; min-width: 21px; height: 21px; margin-left: auto; place-items: center; border-radius: 5px; background: #fff; color: var(--green-dark); font-size: 11px; font-weight: 700; }
+    .side-spacer { flex: 1; }
+    .api-note { margin: 0 3px 16px; border: 1px solid #e7e9de; border-radius: 8px; background: #f5f7ed; padding: 13px; }
+    .api-note strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .api-note p { margin: 0; color: #6d7769; font-size: 11px; line-height: 1.55; }
+    .profile { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 17px 6px 0; }
+    .avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: #f0d2c2; color: #533c31; font-weight: 700; }
+    .profile-name { font-size: 12px; font-weight: 700; }
+    .profile-plan { color: var(--muted); font-size: 11px; }
+    main { max-width: 1520px; min-height: 100vh; margin-left: 244px; padding: 0 42px 54px; }
+    .topbar { display: flex; height: 76px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .sync { display: flex; align-items: center; gap: 7px; margin-right: 9px; color: #69756d; font-size: 11px; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #e3a947; box-shadow: 0 0 0 3px #f7eedc; }
+    .icon-btn { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; }
+    .icon-btn svg { width: 17px; height: 17px; }
+    .primary-btn { display: inline-flex; min-height: 39px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 6px; background: var(--green); color: #fff; padding: 0 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .18s, transform .18s; }
+    .primary-btn:hover { transform: translateY(-1px); background: var(--green-dark); }
+    .primary-btn svg { width: 15px; height: 15px; }
+    .page-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 30px 0 24px; }
+    .eyebrow { margin: 0 0 8px; color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: 1.15px; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 7px; font: 800 27px/1.2 'Manrope', sans-serif; letter-spacing: -.65px; }
+    .intro-copy { margin: 0; color: var(--muted); font-size: 13px; }
+    .period { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+    .period select { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); padding: 8px 26px 8px 10px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 25px; }
+    .stat { min-height: 109px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); padding: 17px 18px 15px; }
+    .stat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 11px; }
+    .stat-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 6px; background: var(--green-wash); color: var(--green); }
+    .stat-icon.warm { background: #fff1df; color: #b66e24; }
+    .stat-icon svg { width: 15px; height: 15px; }
+    .stat-value { margin: 8px 0 0; font: 800 23px/1 'Manrope', sans-serif; letter-spacing: -.6px; }
+    .stat-foot { margin-top: 7px; color: #8b948c; font-size: 10px; }
+    .stat-foot strong { color: var(--green); font-weight: 700; }
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 286px; align-items: start; gap: 19px; }
+    .section-panel { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 19px 16px; }
+    .section-head h2 { margin: 0 0 3px; font: 800 15px 'Manrope', sans-serif; letter-spacing: -.2px; }
+    .section-head p { margin: 0; color: var(--muted); font-size: 11px; }
+    .live-label { display: flex; align-items: center; gap: 6px; color: #79837b; font-size: 10px; white-space: nowrap; }
+    .live-label span { width: 6px; height: 6px; border-radius: 50%; background: #dfa64a; }
+    .filters { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #f0f1ec; border-bottom: 1px solid #f0f1ec; padding: 11px 18px; }
+    .filter-tabs { display: flex; align-items: center; gap: 4px; overflow-x: auto; }
+    .filter { flex: none; border: 0; border-radius: 5px; background: transparent; color: #78817a; padding: 7px 9px; font-size: 10px; cursor: pointer; }
+    .filter.active { background: #eaf3ed; color: var(--green-dark); font-weight: 700; }
+    .search { position: relative; width: 190px; flex: none; }
+    .search svg { position: absolute; top: 9px; left: 10px; width: 14px; height: 14px; color: #929a93; }
+    .search input { width: 100%; height: 33px; border: 1px solid var(--line); border-radius: 5px; outline: none; padding: 0 10px 0 31px; font-size: 10px; }
+    .search input:focus { border-color: #83ad98; box-shadow: 0 0 0 3px #eaf3ed; }
+    .result-meta { display: flex; justify-content: space-between; padding: 12px 19px 8px; color: #8b948c; font-size: 10px; }
+    .sort { border: 0; background: transparent; color: #68736a; font-size: 10px; cursor: pointer; }
+    .product-list { display: grid; gap: 10px; padding: 0 12px 13px; }
+    .deal { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.35fr) 116px; align-items: center; gap: 12px; border: 1px solid #ebeee8; border-radius: 7px; padding: 12px; transition: border .16s, box-shadow .16s; }
+    .deal[hidden] { display: none; }
+    .deal:hover { border-color: #d6e3d9; box-shadow: 0 5px 18px rgba(29,41,36,.045); }
+    .product { display: flex; min-width: 0; align-items: center; gap: 11px; }
+    .product-image { width: 65px; height: 65px; flex: none; overflow: hidden; border-radius: 5px; background: #f3f4f0; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info { min-width: 0; }
+    .product-category { margin-bottom: 4px; color: #8a938b; font-size: 9px; }
+    .product-name { display: -webkit-box; overflow: hidden; margin: 0 0 5px; font-size: 11px; font-weight: 700; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .product-variant { color: #89928a; font-size: 9px; }
+    .offer-pair { display: grid; grid-template-columns: 1fr 20px 1fr; align-items: center; gap: 5px; min-width: 0; }
+    .offer { min-width: 0; }
+    .offer-label { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; color: #7a847c; font-size: 9px; white-space: nowrap; }
+    .store-mark { display: grid; width: 17px; height: 17px; flex: none; place-items: center; border: 1px solid #e7e9e4; border-radius: 4px; background: #fff; color: var(--green-dark); font-size: 8px; font-weight: 800; }
+    .store-mark.trendyol { color: #ef6b35; }
+    .store-mark.hepsi { color: #4b81d0; }
+    .store-mark.amazon { color: #202922; }
+    .store-mark.n11 { color: #e0474e; }
+    .offer-price { overflow: hidden; font: 800 14px/1.2 'Manrope', sans-serif; letter-spacing: -.2px; text-overflow: ellipsis; white-space: nowrap; }
+    .offer-price.high { color: #b34c40; }
+    .offer-note { margin-top: 3px; color: #939b94; font-size: 9px; }
+    .arrow { color: #a6aea6; text-align: center; font-size: 14px; }
+    .deal-result { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .saving { display: inline-flex; align-items: center; border-radius: 4px; background: var(--green-wash); color: var(--green-dark); padding: 5px 7px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .saving-rate { color: #8b948c; font-size: 9px; }
+    .share-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid #dce6de; border-radius: 5px; background: #fff; color: var(--green-dark); padding: 6px 8px; font-size: 9px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+    .share-btn:hover { background: #f0f7f2; }
+    .share-btn svg { width: 12px; height: 12px; }
+    .empty { display: none; padding: 35px 12px; color: var(--muted); text-align: center; font-size: 12px; }
+    .side-column { display: grid; gap: 15px; }
+    .side-card { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 16px; }
+    .side-card h3 { margin: 0 0 14px; font: 800 13px 'Manrope', sans-serif; }
+    .trend-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .trend-head h3 { margin: 0; }
+    .trend-head span { color: var(--muted); font-size: 9px; }
+    .chart { position: relative; height: 103px; margin: 0 -1px 10px; overflow: hidden; border-bottom: 1px solid #edf0e9; background: repeating-linear-gradient(to bottom, transparent 0, transparent 33px, #f0f2ed 34px, transparent 35px); }
+    .chart svg { position: absolute; inset: 8px 0 0; width: 100%; height: 88px; overflow: visible; }
+    .chart-legend { display: flex; justify-content: space-between; color: #98a098; font-size: 9px; }
+    .chart-legend strong { color: var(--green); font-size: 10px; }
+    .platform-list { display: grid; gap: 11px; }
+    .platform { display: flex; align-items: center; gap: 9px; }
+    .platform-name { color: #4f5c53; font-size: 10px; }
+    .platform-status { margin-left: auto; color: #929a93; font-size: 9px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #6fb48d; }
+    .status-dot.demo { background: #dfa64a; }
+    .notice { display: flex; gap: 10px; border-radius: 6px; background: #fff6e9; padding: 12px; }
+    .notice svg { width: 15px; height: 15px; flex: none; color: #bd7c25; }
+    .notice p { margin: 0; color: #776749; font-size: 10px; line-height: 1.55; }
+    .notice strong { color: #594724; }
+    .footer-note { margin: 16px 3px 0; color: #929a93; font-size: 9px; line-height: 1.6; }
+    .settings-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: start; gap: 16px; }
+    .settings-panel { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 19px; }
+    .settings-panel h2, .analysis-panel h2 { margin: 0 0 4px; font: 800 15px 'Manrope', sans-serif; }
+    .settings-subtitle { margin: 0 0 17px; color: var(--muted); font-size: 11px; }
+    .connection-list { display: grid; gap: 7px; margin-bottom: 18px; }
+    .connection-row { display: flex; align-items: center; gap: 10px; border: 1px solid #edf0ea; border-radius: 6px; padding: 9px; }
+    .connection-copy { min-width: 0; }
+    .connection-name { display: block; font-size: 11px; font-weight: 700; }
+    .connection-detail { display: block; margin-top: 2px; color: #8b948c; font-size: 9px; }
+    .connection-state { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; color: #8a7550; font-size: 9px; white-space: nowrap; }
+    .connection-state::before { width: 6px; height: 6px; border-radius: 50%; background: #dfa64a; content: ''; }
+    .connection-configure { border: 1px solid #dce6de; border-radius: 5px; background: #fff; color: var(--green-dark); padding: 6px 8px; font-size: 9px; font-weight: 700; cursor: pointer; }
+    .settings-form { border-top: 1px solid #edf0ea; padding-top: 16px; }
+    .settings-form .field { margin: 11px 0; }
+    .settings-form .field label { font-size: 10px; }
+    .settings-form input, .settings-form select { height: 38px; }
+    .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .settings-help { margin: 11px 0 0; border-left: 3px solid #dfa64a; background: #fff8eb; padding: 9px 10px; color: #756747; font-size: 10px; line-height: 1.55; }
+    .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 10px 0 16px; }
+    .category-option { display: flex; min-height: 38px; align-items: center; gap: 8px; border: 1px solid #e8ece5; border-radius: 5px; padding: 7px 9px; color: #536057; font-size: 10px; cursor: pointer; }
+    .category-option:has(input:checked) { border-color: #b9d3c2; background: #f1f7f2; color: var(--green-dark); }
+    .category-option input { width: 14px; height: 14px; margin: 0; accent-color: var(--green); }
+    .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+    .secondary-btn { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #dce6de; border-radius: 6px; background: #fff; color: var(--green-dark); padding: 0 12px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .secondary-btn:hover { background: #f0f7f2; }
+    .analysis-panel { margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 18px 19px; }
+    .analysis-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .analysis-tag { border-radius: 4px; background: #fff1df; color: #926325; padding: 4px 7px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .analysis-summary { margin: 13px 0 0; color: var(--muted); font-size: 11px; }
+    .analysis-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 18px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .analysis-results li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid #eff1ec; padding: 8px 0; font-size: 10px; }
+    .analysis-results li span:last-child { color: var(--green); font-weight: 700; white-space: nowrap; }
+    .ai-key-note { margin: 8px 0 0; color: #8b948c; font-size: 9px; line-height: 1.5; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; background: rgba(22, 34, 28, .42); padding: 20px; }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(100%, 440px); border-radius: 9px; background: #fff; padding: 23px; box-shadow: 0 24px 70px rgba(0,0,0,.18); animation: rise .2s ease-out; }
+    @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+    .modal h2 { margin: 0 0 5px; font: 800 18px 'Manrope', sans-serif; }
+    .modal p { margin: 0; color: var(--muted); font-size: 11px; }
+    .close-btn { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line); border-radius: 5px; background: #fff; cursor: pointer; }
+    .field { display: grid; gap: 6px; margin: 13px 0; }
+    .field label { color: #5d685f; font-size: 10px; font-weight: 700; }
+    .field input, .field select { width: 100%; height: 40px; border: 1px solid #dfe4dc; border-radius: 5px; outline: 0; background: #fff; padding: 0 11px; font-size: 12px; }
+    .field input:focus, .field select:focus { border-color: #83ad98; box-shadow: 0 0 0 3px #eaf3ed; }
+    .modal-help { border-radius: 5px; background: #f4f6f1; padding: 10px 11px; color: #718074 !important; font-size: 10px !important; line-height: 1.55; }
+    .modal-submit { width: 100%; margin-top: 17px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; max-width: min(420px, calc(100vw - 32px)); transform: translateY(12px); border-radius: 6px; background: var(--ink); color: #fff; padding: 12px 16px; opacity: 0; pointer-events: none; font-size: 12px; box-shadow: var(--shadow); transition: opacity .2s, transform .2s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .mobile-brand { display: none; }
+    @media (max-width: 1180px) {
+      main { padding-right: 25px; padding-left: 25px; }
+      .content-grid { grid-template-columns: minmax(0, 1fr) 250px; gap: 13px; }
+      .deal { grid-template-columns: minmax(0, .95fr) minmax(0, 1.25fr) 104px; gap: 8px; padding: 10px; }
+      .product-image { width: 53px; height: 59px; }
+      .offer-pair { grid-template-columns: 1fr 14px 1fr; gap: 3px; }
+      .offer-price { font-size: 12px; }
+      .share-btn { padding: 6px; }
+    }
+    @media (max-width: 980px) {
+      .sidebar { width: 205px; }
+      main { margin-left: 205px; padding-right: 20px; padding-left: 20px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
+      .side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-card:last-child { grid-column: 1 / -1; }
+      .stats { gap: 9px; }
+      .stat { padding: 14px; }
+    }
+    @media (max-width: 700px) {
+      .sidebar { position: sticky; inset: 0 0 auto; width: 100%; height: 58px; flex-direction: row; align-items: center; justify-content: space-between; border-right: 0; border-bottom: 1px solid var(--line); padding: 0 15px; }
+      .sidebar > .brand { display: none; }
+      .brand { padding: 0; font-size: 16px; }
+      .brand-mark { width: 30px; height: 30px; }
+      .sidebar .nav-label, .sidebar .nav, .side-spacer, .api-note, .profile { display: none; }
+      .mobile-brand { display: flex; align-items: center; gap: 9px; }
+      .mobile-menu { display: flex; gap: 7px; }
+      .mobile-menu .icon-btn { width: 34px; height: 34px; }
+      .sidebar.mobile-open .nav { position: absolute; top: 58px; right: 0; left: 0; display: grid; border-bottom: 1px solid var(--line); background: #fbfcf8; padding: 8px 15px 12px; box-shadow: 0 10px 18px rgba(29,41,36,.06); }
+      main { margin: 0; padding: 0 15px 34px; }
+      .topbar { height: 53px; }
+      .topbar .breadcrumb { font-size: 10px; }
+      .top-actions { gap: 7px; }
+      .top-actions .sync { display: none; }
+      .top-actions .primary-btn { min-height: 34px; padding: 0 10px; font-size: 10px; }
+      .top-actions .primary-btn svg { width: 13px; }
+      .page-intro { align-items: flex-start; padding: 23px 0 17px; }
+      h1 { font-size: 22px; }
+      .intro-copy { max-width: 270px; font-size: 11px; }
+      .period { display: none; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 17px; }
+      .stat { min-height: 94px; padding: 12px; }
+      .stat-value { font-size: 20px; }
+      .stat-head { font-size: 10px; }
+      .section-head { padding: 15px 13px; }
+      .live-label { font-size: 9px; }
+      .filters { align-items: stretch; flex-direction: column-reverse; padding: 10px 12px 8px; }
+      .search { width: 100%; }
+      .search input { height: 35px; }
+      .filter-tabs { margin: 0 -2px; }
+      .filter { padding: 7px 8px; }
+      .result-meta { padding: 10px 13px 8px; }
+      .product-list { gap: 8px; padding: 0 8px 9px; }
+      .deal { grid-template-columns: 1fr auto; gap: 9px; padding: 10px; }
+      .product { grid-column: 1 / -1; }
+      .product-image { width: 54px; height: 54px; }
+      .offer-pair { grid-column: 1 / 2; grid-row: 2; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr); }
+      .deal-result { grid-column: 2; grid-row: 2; }
+      .offer-price { font-size: 12px; }
+      .share-btn { font-size: 8px; }
+      .side-column { grid-template-columns: 1fr; }
+      .side-card:last-child { grid-column: auto; }
+      .side-column .side-card:first-child { display: none; }
+      .footer-note { font-size: 9px; }
+      .settings-panel, .analysis-panel { padding: 14px; }
+      .two-fields, .analysis-results { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Ana gezinme">
+      <div class="mobile-brand">
+        <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17.5 9.2 12l3.4 3.5L20 7.5"/><path d="M15.5 7.5H20V12"/></svg></span>Fiyat Radar</div>
+      </div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17.5 9.2 12l3.4 3.5L20 7.5"/><path d="M15.5 7.5H20V12"/></svg></span>Fiyat Radar</div>
+      <p class="nav-label">Çalışma alanı</p>
+      <nav class="nav">
+        <button class="nav-item active" data-nav="Fırsat akışı"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 5v14"/></svg>Fırsat akışı<span class="nav-count">8</span></button>
+        <button class="nav-item" data-nav="Takip ettiklerim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-4.4-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.6-8 11-8 11Z"/></svg>Takip ettiklerim<span class="nav-count" id="watch-count">12</span></button>
+        <button class="nav-item" data-nav="Bildirim geçmişi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>Bildirim geçmişi</button>
+        <button class="nav-item" data-nav="Ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 1 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 1 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 1 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 1 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z"/></svg>Ayarlar</button>
+      </nav>
+      <div class="side-spacer"></div>
+      <div class="api-note"><strong>Demo çalışma alanı</strong><p>Örnek fiyatlar gösteriliyor. Canlı takip, pazaryeri API erişimleri bağlandığında etkinleşir.</p></div>
+      <div class="profile"><div class="avatar">BY</div><div><div class="profile-name">Besir Yılmaz</div><div class="profile-plan">Ücretsiz plan</div></div></div>
+      <div class="mobile-menu"><button class="icon-btn" id="mobile-nav" aria-label="Gezinme" title="Gezinme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></div>
+    </aside>
+    <main>
+      <div id="dashboard-view">
+      <header class="topbar">
+        <div class="breadcrumb">Çalışma alanı <span aria-hidden="true">/</span> <strong>Fırsat akışı</strong></div>
+        <div class="top-actions"><div class="sync"><span class="sync-dot"></span>Demo verisi · canlı bağlantı yok</div><button class="icon-btn" id="notify-btn" aria-label="Bildirimler" title="Bildirimler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button><button class="primary-btn" id="add-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Ürün ekle</button></div>
+      </header>
+      <section class="page-intro">
+        <div><p class="eyebrow">13 Ekim 2026 · Salı</p><h1>Aynı ürün, farklı fiyat.</h1><p class="intro-copy">Pazaryerleri arasındaki fiyat farklarını tek yerde yakala.</p></div>
+        <label class="period">Dönem <select aria-label="Dönem"><option>Son 7 gün</option><option>Son 30 gün</option><option>Bugün</option></select></label>
+      </section>
+      <section class="stats" aria-label="Özet istatistikler">
+        <article class="stat"><div class="stat-head">Aktif fırsat <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></span></div><div class="stat-value" id="active-count">08</div><div class="stat-foot"><strong>+2 yeni</strong> bugün bulundu</div></article>
+        <article class="stat"><div class="stat-head">En yüksek fiyat farkı <span class="stat-icon warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17 9 11l4 4 8-9"/><path d="M15 6h6v6"/></svg></span></div><div class="stat-value">₺2.450</div><div class="stat-foot">Dyson V15 Detect Absolute</div></article>
+        <article class="stat"><div class="stat-head">Toplam olası tasarruf <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M16 8.5c-.8-.8-1.8-1.2-3.3-1.2-1.8 0-3 .9-3 2.2 0 3.4 6.7 1.3 6.7 4.8 0 1.5-1.3 2.6-3.4 2.6-1.6 0-2.8-.5-3.8-1.5M12 5.5v13"/></svg></span></div><div class="stat-value">₺8.920</div><div class="stat-foot">Tüm fırsatların toplamı</div></article>
+        <article class="stat"><div class="stat-head">Takip edilen ürün <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v17l-6-3.5L6 21V4Z"/><path d="M9 8h6"/></svg></span></div><div class="stat-value" id="tracked-count">12</div><div class="stat-foot">4 pazaryerinde izleniyor</div></article>
+      </section>
+      <div class="content-grid">
+        <section class="section-panel" aria-labelledby="deals-heading">
+          <div class="section-head"><div><h2 id="deals-heading">Fırsat akışı</h2><p>Birden fazla mağazada eşleşen ürün fiyatları</p></div><div class="live-label"><span></span>Örnek veri</div></div>
+          <div class="filters"><div class="filter-tabs" role="tablist" aria-label="Pazaryerine göre filtrele"><button class="filter active" data-filter="all">Tümü <span>8</span></button><button class="filter" data-filter="amazon">Amazon</button><button class="filter" data-filter="trendyol">Trendyol</button><button class="filter" data-filter="hepsiburada">Hepsiburada</button><button class="filter" data-filter="n11">n11</button></div><label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Ürün ara..." aria-label="Ürün ara"></label></div>
+          <div class="result-meta"><span id="result-count">8 fırsat bulundu</span><button class="sort" id="sort-btn">Fiyat farkı: yüksekten düşüğe ↓</button></div>
+          <div class="product-list" id="product-list">
+            <article class="deal" data-market="amazon trendyol" data-title="Dyson V15 Detect Absolute kablosuz süpürge">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=180&q=80" alt="Dikey kablosuz süpürge" loading="lazy"></div><div class="product-info"><div class="product-category">EV & YAŞAM · ELEKTRONİK</div><h3 class="product-name">Dyson V15 Detect Absolute kablosuz süpürge</h3><div class="product-variant">Sarı / Nikel · 2024</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark amazon">a</span>Amazon TR</div><div class="offer-price">₺24.999</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark trendyol">t</span>Trendyol</div><div class="offer-price high">₺27.449</div><div class="offer-note">Satıcı: Dyson Türkiye</div></div></div>
+              <div class="deal-result"><span class="saving">₺2.450 fark</span><span class="saving-rate">%8,9 daha pahalı</span><button class="share-btn" data-title="Dyson V15 Detect Absolute" data-low="https://www.amazon.com.tr/" data-high="https://www.trendyol.com/" aria-label="Dyson ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="trendyol hepsiburada" data-title="Sony WH-1000XM5 kablosuz kulaklık">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=180&q=80" alt="Siyah kablosuz kulaklık" loading="lazy"></div><div class="product-info"><div class="product-category">ELEKTRONİK · SES</div><h3 class="product-name">Sony WH-1000XM5 kablosuz kulaklık</h3><div class="product-variant">Siyah · Bluetooth 5.2</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark trendyol">t</span>Trendyol</div><div class="offer-price">₺11.890</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark hepsi">h</span>Hepsiburada</div><div class="offer-price high">₺13.249</div><div class="offer-note">Satıcı: Teknosa</div></div></div>
+              <div class="deal-result"><span class="saving">₺1.359 fark</span><span class="saving-rate">%10,3 daha pahalı</span><button class="share-btn" data-title="Sony WH-1000XM5" data-low="https://www.trendyol.com/" data-high="https://www.hepsiburada.com/" aria-label="Sony ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="amazon n11" data-title="Apple Watch Series 10 GPS 46 mm">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=180&q=80" alt="Akıllı saat" loading="lazy"></div><div class="product-info"><div class="product-category">ELEKTRONİK · GİYİLEBİLİR</div><h3 class="product-name">Apple Watch Series 10 GPS 46 mm</h3><div class="product-variant">Jet Siyahı · Alüminyum kasa</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark n11">n</span>n11</div><div class="offer-price">₺16.799</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark amazon">a</span>Amazon TR</div><div class="offer-price high">₺17.649</div><div class="offer-note">Satıcı: Apple</div></div></div>
+              <div class="deal-result"><span class="saving">₺850 fark</span><span class="saving-rate">%4,8 daha pahalı</span><button class="share-btn" data-title="Apple Watch Series 10" data-low="https://www.n11.com/" data-high="https://www.amazon.com.tr/" aria-label="Apple Watch bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="hepsiburada trendyol" data-title="JBL Flip 6 taşınabilir bluetooth hoparlör">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=180&q=80" alt="Taşınabilir bluetooth hoparlör" loading="lazy"></div><div class="product-info"><div class="product-category">ELEKTRONİK · SES</div><h3 class="product-name">JBL Flip 6 taşınabilir bluetooth hoparlör</h3><div class="product-variant">Siyah · Suya dayanıklı</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark hepsi">h</span>Hepsiburada</div><div class="offer-price">₺3.199</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark trendyol">t</span>Trendyol</div><div class="offer-price high">₺3.749</div><div class="offer-note">Satıcı: JBL Store</div></div></div>
+              <div class="deal-result"><span class="saving">₺550 fark</span><span class="saving-rate">%14,7 daha pahalı</span><button class="share-btn" data-title="JBL Flip 6" data-low="https://www.hepsiburada.com/" data-high="https://www.trendyol.com/" aria-label="JBL ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="amazon trendyol" data-title="Nike Air Force 1 07 erkek sneaker">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=180&q=80" alt="Kırmızı spor ayakkabı" loading="lazy"></div><div class="product-info"><div class="product-category">MODA · AYAKKABI</div><h3 class="product-name">Nike Air Force 1 '07 erkek sneaker</h3><div class="product-variant">Beyaz · 42 numara</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark amazon">a</span>Amazon TR</div><div class="offer-price">₺4.249</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark trendyol">t</span>Trendyol</div><div class="offer-price high">₺4.699</div><div class="offer-note">Satıcı: Nike Store</div></div></div>
+              <div class="deal-result"><span class="saving">₺450 fark</span><span class="saving-rate">%9,6 daha pahalı</span><button class="share-btn" data-title="Nike Air Force 1 07" data-low="https://www.amazon.com.tr/" data-high="https://www.trendyol.com/" aria-label="Nike ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="n11 hepsiburada" data-title="Philips Lumea Prestige IPL 9900">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=180&q=80" alt="Kişisel bakım ürünü" loading="lazy"></div><div class="product-info"><div class="product-category">GÜZELLİK · KİŞİSEL BAKIM</div><h3 class="product-name">Philips Lumea Prestige IPL 9900</h3><div class="product-variant">BRI977/00 · 4 başlık</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark hepsi">h</span>Hepsiburada</div><div class="offer-price">₺18.450</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark n11">n</span>n11</div><div class="offer-price high">₺18.799</div><div class="offer-note">Satıcı: Philips</div></div></div>
+              <div class="deal-result"><span class="saving">₺349 fark</span><span class="saving-rate">%1,9 daha pahalı</span><button class="share-btn" data-title="Philips Lumea Prestige 9900" data-low="https://www.hepsiburada.com/" data-high="https://www.n11.com/" aria-label="Philips ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="trendyol n11" data-title="Stanley Quencher H2.0 FlowState 1.18 L">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=180&q=80" alt="Paslanmaz çelik termos" loading="lazy"></div><div class="product-info"><div class="product-category">EV & YAŞAM · MATARA</div><h3 class="product-name">Stanley Quencher H2.0 FlowState 1.18 L</h3><div class="product-variant">Rose Quartz · Paslanmaz çelik</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark n11">n</span>n11</div><div class="offer-price">₺1.899</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark trendyol">t</span>Trendyol</div><div class="offer-price high">₺2.149</div><div class="offer-note">Satıcı: Stanley TR</div></div></div>
+              <div class="deal-result"><span class="saving">₺250 fark</span><span class="saving-rate">%11,6 daha pahalı</span><button class="share-btn" data-title="Stanley Quencher H2.0" data-low="https://www.n11.com/" data-high="https://www.trendyol.com/" aria-label="Stanley ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+            <article class="deal" data-market="amazon hepsiburada" data-title="Logitech MX Master 3S kablosuz mouse">
+              <div class="product"><div class="product-image"><img src="https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=180&q=80" alt="Bilgisayar faresi" loading="lazy"></div><div class="product-info"><div class="product-category">ELEKTRONİK · AKSESUAR</div><h3 class="product-name">Logitech MX Master 3S kablosuz mouse</h3><div class="product-variant">Grafit · USB-C</div></div></div>
+              <div class="offer-pair"><div class="offer"><div class="offer-label"><span class="store-mark amazon">a</span>Amazon TR</div><div class="offer-price">₺3.699</div><div class="offer-note">Ücretsiz kargo</div></div><div class="arrow">→</div><div class="offer"><div class="offer-label"><span class="store-mark hepsi">h</span>Hepsiburada</div><div class="offer-price high">₺3.899</div><div class="offer-note">Satıcı: Logitech</div></div></div>
+              <div class="deal-result"><span class="saving">₺200 fark</span><span class="saving-rate">%5,1 daha pahalı</span><button class="share-btn" data-title="Logitech MX Master 3S" data-low="https://www.amazon.com.tr/" data-high="https://www.hepsiburada.com/" aria-label="Logitech ürün bağlantılarını paylaş"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.1"/></svg>İki ürünü gönder</button></div>
+            </article>
+          </div>
+          <div class="empty" id="empty-state">Bu aramayla eşleşen fırsat bulunamadı.</div>
+        </section>
+        <aside class="side-column" aria-label="Pazaryeri durumu ve özet">
+          <section class="side-card"><div class="trend-head"><h3>Tasarruf eğilimi</h3><span>Son 7 gün</span></div><div class="chart" aria-label="Haftalık tasarruf grafiği"><svg viewBox="0 0 260 90" preserveAspectRatio="none" role="img"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#176b50" stop-opacity=".18"/><stop offset="1" stop-color="#176b50" stop-opacity="0"/></linearGradient></defs><path d="M0 71 C18 67 22 74 38 63 S61 59 76 64 S94 48 111 51 S130 45 144 55 S165 43 181 39 S202 46 215 29 S239 31 260 11 L260 90 L0 90Z" fill="url(#area)"/><path d="M0 71 C18 67 22 74 38 63 S61 59 76 64 S94 48 111 51 S130 45 144 55 S165 43 181 39 S202 46 215 29 S239 31 260 11" fill="none" stroke="#176b50" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle cx="260" cy="11" r="3.5" fill="#d7ef75" stroke="#176b50" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div><div class="chart-legend"><span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span><strong>₺8.920</strong></div></section>
+          <section class="side-card"><h3>Pazaryerleri</h3><div class="platform-list"><div class="platform"><span class="store-mark amazon">a</span><span class="platform-name">Amazon Türkiye</span><span class="platform-status"><i class="status-dot demo"></i> Demo</span></div><div class="platform"><span class="store-mark trendyol">t</span><span class="platform-name">Trendyol</span><span class="platform-status"><i class="status-dot demo"></i> Demo</span></div><div class="platform"><span class="store-mark hepsi">h</span><span class="platform-name">Hepsiburada</span><span class="platform-status"><i class="status-dot demo"></i> Demo</span></div><div class="platform"><span class="store-mark n11">n</span><span class="platform-name">n11</span><span class="platform-status"><i class="status-dot demo"></i> Demo</span></div></div><p class="footer-note">Canlı fiyatlar, ilgili platformların yetkili API veya iş ortaklığı erişimiyle bağlanır. Bu ekrandaki liste örnek veridir.</p></section>
+          <section class="side-card"><div class="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg><p><strong>Paylaşım hazır.</strong> “İki ürünü gönder” ile iki mağaza bağlantısını cihazındaki paylaşım menüsüne aktarabilir veya panoya kopyalayabilirsin.</p></div></section>
+        </aside>
+      </div>
+      </div>
+      <section id="settings-view" hidden>
+        <header class="topbar">
+          <div class="breadcrumb">Çalışma alanı <span aria-hidden="true">/</span> <strong>Ayarlar</strong></div>
+          <div class="top-actions"><div class="sync"><span class="sync-dot"></span>API bağlantısı yok</div></div>
+        </header>
+        <section class="page-intro">
+          <div><p class="eyebrow">Kontrol merkezi</p><h1>Bağlantılar ve tarama.</h1><p class="intro-copy">Pazaryerlerini, kategorileri ve karşılaştırma kurallarını yapılandır.</p></div>
+        </section>
+        <div class="settings-grid">
+          <section class="settings-panel" aria-labelledby="marketplace-settings-title">
+            <h2 id="marketplace-settings-title">Pazaryeri API bağlantıları</h2>
+            <p class="settings-subtitle">Her platform için yetkili API erişimi gerekir. Satıcı API anahtarları tüm ilanları arama yetkisi vermeyebilir.</p>
+            <div class="connection-list">
+              <div class="connection-row"><span class="store-mark amazon">a</span><div class="connection-copy"><span class="connection-name">Amazon Türkiye</span><span class="connection-detail">Creators API · Associates hesabı</span></div><span class="connection-state" id="status-amazon">Bağlı değil</span><button class="connection-configure" data-configure="amazon">Yapılandır</button></div>
+              <div class="connection-row"><span class="store-mark trendyol">t</span><div class="connection-copy"><span class="connection-name">Trendyol</span><span class="connection-detail">Partner / satıcı API erişimi</span></div><span class="connection-state" id="status-trendyol">Bağlı değil</span><button class="connection-configure" data-configure="trendyol">Yapılandır</button></div>
+              <div class="connection-row"><span class="store-mark hepsi">h</span><div class="connection-copy"><span class="connection-name">Hepsiburada</span><span class="connection-detail">Geliştirici hesabı ve API anahtarı</span></div><span class="connection-state" id="status-hepsiburada">Bağlı değil</span><button class="connection-configure" data-configure="hepsiburada">Yapılandır</button></div>
+              <div class="connection-row"><span class="store-mark n11">n</span><div class="connection-copy"><span class="connection-name">n11</span><span class="connection-detail">API erişimi sağlayıcıdan teyit edilmeli</span></div><span class="connection-state" id="status-n11">Bağlı değil</span><button class="connection-configure" data-configure="n11">Yapılandır</button></div>
+            </div>
+            <form class="settings-form" id="market-api-form">
+              <div class="field"><label for="marketplace-select">Pazaryeri</label><select id="marketplace-select"><option value="amazon">Amazon Türkiye</option><option value="trendyol">Trendyol</option><option value="hepsiburada">Hepsiburada</option><option value="n11">n11</option></select></div>
+              <div class="two-fields"><div class="field"><label for="market-api-key">API anahtarı / Client ID</label><input id="market-api-key" type="password" autocomplete="off" placeholder="API anahtarı" spellcheck="false"></div><div class="field"><label for="market-api-secret">API gizli anahtarı</label><input id="market-api-secret" type="password" autocomplete="new-password" placeholder="Gizli anahtar" spellcheck="false"></div></div>
+              <button class="secondary-btn" type="submit">Bağlantıyı test et</button>
+              <p class="settings-help">Güvenlik: Bu prototip API anahtarlarını kaydetmez veya göndermez. Gerçek kullanımda anahtarlar yalnızca sunucu tarafında tutulmalı.</p>
+            </form>
+          </section>
+          <section class="settings-panel" aria-labelledby="ai-settings-title">
+            <h2 id="ai-settings-title">AI kategori taraması</h2>
+            <p class="settings-subtitle">Araştırılacak kategorileri seç, fiyat farkı eşiğini belirle.</p>
+            <div class="field"><label for="ai-provider">AI sağlayıcısı</label><select id="ai-provider"><option value="demo">Demo analiz (AI bağlı değil)</option><option value="openai">OpenAI API</option><option value="gemini">Google Gemini API</option><option value="anthropic">Anthropic API</option></select></div>
+            <div class="field"><label for="ai-api-key">AI API anahtarı</label><input id="ai-api-key" type="password" autocomplete="new-password" placeholder="Sunucuya bağlanınca kullanılacak" spellcheck="false"><p class="ai-key-note">Anahtar bu prototipte kaydedilmez. Canlı AI analizi için güvenli bir sunucu bağlantısı kurulmalı.</p></div>
+            <div class="field"><label>İzlenecek kategoriler</label><div class="category-grid">
+              <label class="category-option"><input type="checkbox" name="category" value="electronics" checked>Elektronik</label>
+              <label class="category-option"><input type="checkbox" name="category" value="home" checked>Ev & yaşam</label>
+              <label class="category-option"><input type="checkbox" name="category" value="fashion" checked>Moda</label>
+              <label class="category-option"><input type="checkbox" name="category" value="beauty" checked>Güzellik & bakım</label>
+            </div></div>
+            <div class="two-fields"><div class="field"><label for="min-difference">En az fiyat farkı (%)</label><input id="min-difference" type="number" min="0" max="100" step="0.5" value="5"></div><div class="field"><label for="scan-frequency">Tarama sıklığı</label><select id="scan-frequency"><option value="hourly">Saatte bir</option><option value="daily">Günde bir</option><option value="15min">15 dakikada bir</option></select></div></div>
+            <div class="settings-actions"><button class="primary-btn" id="run-analysis" type="button">Seçili kategorileri analiz et</button><button class="secondary-btn" id="save-settings" type="button">Tercihleri kaydet</button></div>
+          </section>
+        </div>
+        <section class="analysis-panel" aria-labelledby="analysis-title">
+          <div class="analysis-head"><div><h2 id="analysis-title">Kategori analiz sonucu</h2><p class="settings-subtitle">Mevcut örnek ürünler üzerinde yerel filtreleme yapılır.</p></div><span class="analysis-tag">Demo · canlı tarama yok</span></div>
+          <p class="analysis-summary" id="analysis-summary" role="status">Henüz analiz yapılmadı. Kategori seçip analizi başlat.</p>
+          <ul class="analysis-results" id="analysis-results"></ul>
+        </section>
+      </section>
+    </main>
+  </div>
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <form class="modal" id="product-form">
+      <div class="modal-top"><div><h2 id="modal-title">Ürün takibe ekle</h2><p>Fiyatı izlenecek ürünün mağaza bağlantısını gir.</p></div><button type="button" class="close-btn" id="modal-close" aria-label="Kapat">×</button></div>
+      <div class="field"><label for="product-url">Ürün bağlantısı</label><input id="product-url" type="url" placeholder="https://www.trendyol.com/..." required></div>
+      <div class="field"><label for="product-title">Ürün adı <span style="font-weight:400;color:#929a93">(isteğe bağlı)</span></label><input id="product-title" type="text" placeholder="Örn. Sony WH-1000XM5"></div>
+      <div class="field"><label for="target-price">Bildirim eşiği <span style="font-weight:400;color:#929a93">(isteğe bağlı)</span></label><input id="target-price" type="number" min="1" placeholder="Hedef fiyat, ₺"></div>
+      <p class="modal-help">Demo modunda kayıt yalnızca bu tarayıcı oturumunda tutulur. Otomatik fiyat taraması ve e-posta bildirimleri henüz bağlı değildir.</p>
+      <button type="submit" class="primary-btn modal-submit">Takip listesine ekle</button>
+    </form>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const deals = [...document.querySelectorAll('.deal')];
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    let activeMarket = 'all';
+    let highestFirst = true;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function marketplaceSearchUrl(marketUrl, title) {
+      const host = new URL(marketUrl).hostname;
+      const query = encodeURIComponent(title);
+      if (host.includes('amazon.com.tr')) return `https://www.amazon.com.tr/s?k=${query}`;
+      if (host.includes('trendyol.com')) return `https://www.trendyol.com/sr?q=${query}`;
+      if (host.includes('hepsiburada.com')) return `https://www.hepsiburada.com/ara?q=${query}`;
+      if (host.includes('n11.com')) return `https://www.n11.com/arama?q=${query}`;
+      return marketUrl;
+    }
+
+    function updateResults() {
+      const query = document.getElementById('search').value.trim().toLocaleLowerCase('tr');
+      let visible = 0;
+      deals.forEach((deal) => {
+        const matchesMarket = activeMarket === 'all' || deal.dataset.market.split(' ').includes(activeMarket);
+        const matchesText = deal.dataset.title.toLocaleLowerCase('tr').includes(query);
+        deal.hidden = !(matchesMarket && matchesText);
+        if (!deal.hidden) visible++;
+      });
+      document.getElementById('result-count').textContent = `${visible} fırsat bulundu`;
+      document.getElementById('empty-state').style.display = visible ? 'none' : 'block';
+    }
+
+    function showView(view) {
+      const isSettings = view === 'settings';
+      document.getElementById('dashboard-view').hidden = isSettings;
+      document.getElementById('settings-view').hidden = !isSettings;
+      document.querySelectorAll('.nav-item').forEach((button) => {
+        button.classList.toggle('active', button.dataset.nav === (isSettings ? 'Ayarlar' : 'Fırsat akışı'));
+      });
+      document.querySelector('.sidebar').classList.remove('mobile-open');
+    }
+
+    function loadSavedPreferences() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('fiyat-radar-preferences') || '{}');
+        if (saved.provider) document.getElementById('ai-provider').value = saved.provider;
+        if (saved.minimumDifference !== undefined) document.getElementById('min-difference').value = saved.minimumDifference;
+        if (saved.frequency) document.getElementById('scan-frequency').value = saved.frequency;
+        if (Array.isArray(saved.categories)) {
+          document.querySelectorAll('input[name="category"]').forEach((checkbox) => {
+            checkbox.checked = saved.categories.includes(checkbox.value);
+          });
+        }
+      } catch {
+        showToast('Kayıtlı tercihler okunamadı.');
+      }
+    }
+
+    document.querySelectorAll('.filter').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelector('.filter.active').classList.remove('active');
+        button.classList.add('active');
+        activeMarket = button.dataset.filter;
+        updateResults();
+      });
+    });
+    document.getElementById('search').addEventListener('input', updateResults);
+    document.getElementById('sort-btn').addEventListener('click', () => {
+      const list = document.getElementById('product-list');
+      const sorted = [...deals].sort((a, b) => {
+        const first = Number(a.querySelector('.saving').textContent.replace(/[^0-9]/g, ''));
+        const second = Number(b.querySelector('.saving').textContent.replace(/[^0-9]/g, ''));
+        return highestFirst ? second - first : first - second;
+      });
+      sorted.forEach((deal) => list.append(deal));
+      highestFirst = !highestFirst;
+      document.getElementById('sort-btn').textContent = `Fiyat farkı: ${highestFirst ? 'yüksekten düşüğe ↓' : 'düşükten yükseğe ↑'}`;
+    });
+
+    document.querySelectorAll('.share-btn').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const shareText = `${button.dataset.title}\nDaha uygun fiyat: ${marketplaceSearchUrl(button.dataset.low, button.dataset.title)}\nDiğer mağaza: ${marketplaceSearchUrl(button.dataset.high, button.dataset.title)}`;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: `${button.dataset.title} fiyat karşılaştırması`, text: shareText });
+            showToast('İki ürün bağlantısı paylaşıldı.');
+          } else {
+            await navigator.clipboard.writeText(shareText);
+            showToast('İki mağaza bağlantısı panoya kopyalandı.');
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') showToast('Paylaşım açılamadı; tarayıcı izinlerini kontrol et.');
+        }
+      });
+    });
+
+    const modal = document.getElementById('modal');
+    document.getElementById('add-open').addEventListener('click', () => modal.classList.add('open'));
+    document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (event) => { if (event.target === modal) modal.classList.remove('open'); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') modal.classList.remove('open'); });
+    document.getElementById('product-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const url = document.getElementById('product-url').value;
+      const name = document.getElementById('product-title').value.trim() || new URL(url).hostname.replace(/^www\./, '');
+      const count = document.getElementById('tracked-count');
+      count.textContent = String(Number(count.textContent) + 1);
+      document.getElementById('watch-count').textContent = count.textContent;
+      modal.classList.remove('open');
+      event.target.reset();
+      showToast(`“${name}” demo takip listene eklendi. Canlı fiyat taraması bağlı değil.`);
+    });
+
+    document.querySelectorAll('.nav-item').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (button.dataset.nav === 'Ayarlar') {
+          showView('settings');
+        } else if (button.dataset.nav === 'Fırsat akışı') {
+          showView('dashboard');
+        } else {
+          showToast(`${button.dataset.nav} demo sürümünde henüz etkin değil.`);
+        }
+      });
+    });
+    document.getElementById('notify-btn').addEventListener('click', () => showToast('Bildirim geçmişi demo sürümünde henüz etkin değil.'));
+    document.getElementById('mobile-nav').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('mobile-open'));
+
+    document.querySelectorAll('[data-configure]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.getElementById('marketplace-select').value = button.dataset.configure;
+        document.getElementById('market-api-key').focus();
+      });
+    });
+
+    document.getElementById('market-api-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const hasKey = document.getElementById('market-api-key').value || document.getElementById('market-api-secret').value;
+      document.getElementById('market-api-key').value = '';
+      document.getElementById('market-api-secret').value = '';
+      showToast(hasKey
+        ? 'Bu demo sürümünde API bağlantısı doğrulanmadı; anahtarlar kaydedilmeden temizlendi.'
+        : 'Önce API bilgilerini gir. Canlı doğrulama için sunucu entegrasyonu gerekiyor.');
+    });
+
+    document.getElementById('save-settings').addEventListener('click', () => {
+      const preferences = {
+        provider: document.getElementById('ai-provider').value,
+        minimumDifference: document.getElementById('min-difference').value,
+        frequency: document.getElementById('scan-frequency').value,
+        categories: [...document.querySelectorAll('input[name="category"]:checked')].map((checkbox) => checkbox.value)
+      };
+      try {
+        localStorage.setItem('fiyat-radar-preferences', JSON.stringify(preferences));
+        showToast('Tarama tercihleri bu tarayıcıya kaydedildi. API anahtarları kaydedilmedi.');
+      } catch {
+        showToast('Tercihler kaydedilemedi; tarayıcı depolama iznini kontrol et.');
+      }
+    });
+
+    document.getElementById('run-analysis').addEventListener('click', () => {
+      const categories = [...document.querySelectorAll('input[name="category"]:checked')].map((checkbox) => checkbox.value);
+      const categoryLabels = { electronics: 'ELEKTRONİK', home: 'EV & YAŞAM', fashion: 'MODA', beauty: 'GÜZELLİK' };
+      const minimumDifference = Number(document.getElementById('min-difference').value) || 0;
+      const resultList = document.getElementById('analysis-results');
+      resultList.replaceChildren();
+
+      if (!categories.length) {
+        document.getElementById('analysis-summary').textContent = 'Analiz için en az bir kategori seç.';
+        return;
+      }
+
+      const matches = deals.filter((deal) => {
+        const productCategory = deal.querySelector('.product-category').textContent.toLocaleUpperCase('tr');
+        const percentage = Number(deal.querySelector('.saving-rate').textContent.match(/[0-9]+,[0-9]+|[0-9]+/)?.[0].replace(',', '.') || 0);
+        return categories.some((category) => productCategory.includes(categoryLabels[category])) && percentage >= minimumDifference;
+      });
+
+      matches.forEach((deal) => {
+        const item = document.createElement('li');
+        const productName = document.createElement('span');
+        const difference = document.createElement('span');
+        productName.textContent = deal.dataset.title;
+        difference.textContent = deal.querySelector('.saving').textContent;
+        item.append(productName, difference);
+        resultList.append(item);
+      });
+
+      const summary = matches.length
+        ? `Demo tarama tamamlandı: ${deals.length} örnek üründen ${matches.length} tanesi seçili kategorilerde ve en az %${minimumDifference} fiyat farkında.`
+        : 'Seçili kategoriler ve fiyat farkı eşiğiyle eşleşen örnek ürün yok.';
+      document.getElementById('analysis-summary').textContent = `${summary} Gerçek AI/API taraması yapılmadı.`;
+    });
+
+    loadSavedPreferences();
+  </script>
+</body>
+</html>
