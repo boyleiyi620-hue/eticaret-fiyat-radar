@@ -1,0 +1,19 @@
+{
+  "name": "Fiyat Radar",
+  "short_name": "Fiyat Radar",
+  "description": "Aynı ürünün farklı pazaryerlerinde daha pahalı fiyatlandığı noktaları takip eden fiyat karşılaştırma uygulaması.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f2",
+  "theme_color": "#f6f7f2",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
