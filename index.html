@@ -199,6 +199,13 @@
     .modal-submit { width: 100%; margin-top: 17px; }
     .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; max-width: min(420px, calc(100vw - 32px)); transform: translateY(12px); border-radius: 6px; background: var(--ink); color: #fff; padding: 12px 16px; opacity: 0; pointer-events: none; font-size: 12px; box-shadow: var(--shadow); transition: opacity .2s, transform .2s; }
     .toast.show { transform: translateY(0); opacity: 1; }
+    .install-banner { position: fixed; right: 18px; bottom: 18px; z-index: 25; display: flex; align-items: center; gap: 16px; max-width: min(500px, calc(100vw - 30px)); border: 1px solid #dfe9e3; border-radius: 12px; background: rgba(255,255,255,.96); box-shadow: 0 16px 40px rgba(22, 34, 28, .11); padding: 12px 14px; backdrop-filter: blur(10px); }
+    .install-banner.hidden { display: none; }
+    .install-banner .install-copy { min-width: 0; }
+    .install-banner .install-eyebrow { margin: 0 0 4px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: 1.1px; text-transform: uppercase; }
+    .install-banner .install-text { margin: 0; color: #51605a; font-size: 12px; line-height: 1.45; }
+    .install-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .install-actions .primary-btn, .install-actions .secondary-btn { min-height: 34px; font-size: 10px; }
     .mobile-brand { display: none; }
     @media (max-width: 1180px) {
       main { padding-right: 25px; padding-left: 25px; }
@@ -419,19 +426,45 @@
       <button type="submit" class="primary-btn modal-submit">Takip listesine ekle</button>
     </form>
   </div>
+  <div id="install-banner" class="install-banner hidden" aria-live="polite">
+    <div class="install-copy">
+      <p class="install-eyebrow">Ana ekrana ekle</p>
+      <p id="install-message" class="install-text">Uygulamayı ana ekrana ekleyerek daha hızlı erişebilirsiniz.</p>
+    </div>
+    <div class="install-actions">
+      <button id="install-button" class="primary-btn" type="button">Yükle</button>
+      <button id="dismiss-install" class="secondary-btn" type="button">Kapat</button>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     const deals = [...document.querySelectorAll('.deal')];
     const toast = document.getElementById('toast');
+    const installBanner = document.getElementById('install-banner');
+    const installMessage = document.getElementById('install-message');
+    const installButton = document.getElementById('install-button');
+    const dismissInstallButton = document.getElementById('dismiss-install');
     let toastTimer;
     let activeMarket = 'all';
     let highestFirst = true;
+    let deferredPrompt = null;
 
     function showToast(message) {
       toast.textContent = message;
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function showInstallBanner(message) {
+      if (!installBanner) return;
+      installMessage.textContent = message;
+      installBanner.classList.remove('hidden');
+    }
+
+    function hideInstallBanner() {
+      if (!installBanner) return;
+      installBanner.classList.add('hidden');
     }
 
     function marketplaceSearchUrl(marketUrl, title) {
@@ -551,6 +584,49 @@
     });
     document.getElementById('notify-btn').addEventListener('click', () => showToast('Bildirim geçmişi demo sürümünde henüz etkin değil.'));
     document.getElementById('mobile-nav').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('mobile-open'));
+
+    installButton.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        const isSafari = /iPhone|iPad|iPod/i.test(navigator.userAgent) || /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+        if (isSafari) {
+          showToast('Safari’de Paylaş > Ana ekrana ekle seçeneğini kullanın.');
+        } else {
+          showToast('Bu tarayıcıda otomatik kurulum desteği yok. Tarayıcınızın menüsünden “Ana ekrana ekle”yi seçin.');
+        }
+        return;
+      }
+
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('Uygulama ana ekrana eklendi.');
+      } else {
+        showToast('Yükleme işlemi iptal edildi.');
+      }
+      deferredPrompt = null;
+      hideInstallBanner();
+    });
+
+    dismissInstallButton.addEventListener('click', () => hideInstallBanner());
+
+    if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
+      const isSafari = /iPhone|iPad|iPod/i.test(navigator.userAgent) || /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+      const defaultMessage = isSafari
+        ? 'Safari’de paylaş simgesine dokunup “Ana ekrana ekle” seçeneğini seçin.'
+        : 'Bu uygulamayı ana ekrana ekleyerek hızlı erişim sağlayabilirsiniz.';
+      showInstallBanner(defaultMessage);
+    }
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      showInstallBanner('Uygulamayı ana ekrana eklemek için aşağıdaki butona basın.');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      hideInstallBanner();
+      showToast('Uygulama başarıyla ana ekrana eklendi.');
+    });
 
     document.querySelectorAll('[data-configure]').forEach((button) => {
       button.addEventListener('click', () => {
