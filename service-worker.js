@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiyat-radar-v3';
+const CACHE_NAME = 'fiyat-radar-v4';
 const APP_SHELL = [
   './',
   './index.html',
