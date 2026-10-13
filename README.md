@@ -52,12 +52,11 @@ create policy "Users can delete their own tracked products"
 
 ## Ücretsiz Gemini AI
 
-1. [Google AI Studio'dan](https://aistudio.google.com/app/apikey) kendi Gemini API anahtarınızı oluşturun.
-2. Uygulamada **Ayarlar → AI kategori taraması** alanına anahtarı girip **API anahtarını doğrula ve bağla** düğmesine basın. Başarılı olursa seçili Google AI Studio projesinde kullanılabilir Gemini modeli doğrulanır; anahtar sadece açık sekmenin belleğinde tutulur.
+1. [Google AI Studio API Keys](https://aistudio.google.com/api-keys) sayfasından Gemini API için bir anahtar oluşturun.
+2. Uygulamada **Ayarlar → AI kategori taraması** alanına anahtarı girip **API anahtarını doğrula ve bağla** düğmesine basın. Uygulama anahtarı URL'de değil x-goog-api-key başlığında gönderir ve sohbet/video ile aynı Gemini modeline kısa bir istek yaparak erişimi doğrular. Anahtar yalnızca açık sekmenin belleğinde tutulur.
 3. **AI asistan** ile sohbet edin veya **Video stüdyosu → AI ile sahne taslağı oluştur** ile AI storyboard'u hazırlayın. Ardından storyboard'u sessiz WebM animasyonuna dönüştürmek için **Videoyu oluştur ve indir** düğmesine basın. Bu özellik gerçekçi AI video/görüntüsü üretmez.
 
-API doğrulama hatası alırsanız anahtarın Google AI Studio'da oluşturulduğunu, Gemini API erişiminin etkin olduğunu ve anahtarın web sitesi yönlendirme kısıtlamalarının GitHub Pages alan adınızı kapsadığını kontrol edin. Ücretsiz kullanım kotası dolduğunda Google Gemini 429/kota hatası döndürebilir.
-
+403 erişim hatası alırsanız AI Studio'daki **API Keys** sayfasında anahtarın Gemini API için oluşturulduğunu kontrol edin. Google, 2026'dan itibaren yeni AI Studio anahtarlarını yetkilendirme anahtarı olarak oluşturur ve kısıtlanmamış eski standart anahtarları reddedebilir. Google Cloud Console'da anahtar için API kısıtlaması ayarlandıysa **Generative Language API** erişimine izin verin. 429 hatası ücretsiz kullanım kotasının dolduğunu gösterebilir.
 API istekleri ve yazdığınız mesajlar Google Gemini'ye gönderilir. Anahtar tarayıcı depolamasına yazılmaz; yalnızca açık sekmenin belleğinde tutulur. Google'ın ücretsiz kota, model erişimi ve kullanım koşulları zamanla değişebilir. Bu, üretim ortamında güvenli bir API anahtarı saklama yöntemi değildir; herkese açık bir uygulamada anahtarı sunucu tarafında koruyun ve kullanıcı başına erişimi sınırlandırın. API anahtarını herkese açık veya ortak cihazlarda kullanmayın.
 
 Video stüdyosu storyboard'u hareketli tasarım metinlerine dönüştürür ve WebM olarak dışa aktarır. Ücretsiz/çevrimdışı örnek storyboard da kullanılabilir. Gerçekçi AI video üretimi yapmaz; ücretli video üretim servislerine istek göndermez.
