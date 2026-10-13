@@ -419,7 +419,7 @@
   <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <form class="modal" id="product-form">
       <div class="modal-top"><div><h2 id="modal-title">Ürün takibe ekle</h2><p>Fiyatı izlenecek ürünün mağaza bağlantısını gir.</p></div><button type="button" class="close-btn" id="modal-close" aria-label="Kapat">×</button></div>
-      <div class="field"><label for="product-url">Ürün bağlantısı</label><input id="product-url" type="url" placeholder="https://www.trendyol.com/..." required></div>
+      <div class="field"><label for="product-url">Ürün bağlantısı</label><input id="product-url" type="text" inputmode="url" autocomplete="url" placeholder="https://www.trendyol.com/..." required></div>
       <div class="field"><label for="product-title">Ürün adı <span style="font-weight:400;color:#929a93">(isteğe bağlı)</span></label><input id="product-title" type="text" placeholder="Örn. Sony WH-1000XM5"></div>
       <div class="field"><label for="target-price">Bildirim eşiği <span style="font-weight:400;color:#929a93">(isteğe bağlı)</span></label><input id="target-price" type="number" min="1" placeholder="Hedef fiyat, ₺"></div>
       <p class="modal-help">Demo modunda kayıt yalnızca bu tarayıcı oturumunda tutulur. Otomatik fiyat taraması ve e-posta bildirimleri henüz bağlı değildir.</p>
@@ -561,8 +561,26 @@
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape') modal.classList.remove('open'); });
     document.getElementById('product-form').addEventListener('submit', (event) => {
       event.preventDefault();
-      const url = document.getElementById('product-url').value;
-      const name = document.getElementById('product-title').value.trim() || new URL(url).hostname.replace(/^www\./, '');
+      const urlInput = document.getElementById('product-url');
+      const rawUrl = urlInput.value.trim();
+      let parsedUrl;
+
+      if (!rawUrl) {
+        showToast('Ürün bağlantısı gerekli. Lütfen bir URL gir.');
+        urlInput.focus();
+        return;
+      }
+
+      try {
+        parsedUrl = new URL(rawUrl.includes('://') ? rawUrl : `https://${rawUrl}`);
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Desteklenmeyen URL protokolü.');
+      } catch {
+        showToast('Geçerli bir ürün URL’si gir.');
+        urlInput.focus();
+        return;
+      }
+
+      const name = document.getElementById('product-title').value.trim() || parsedUrl.hostname.replace(/^www\./, '');
       const count = document.getElementById('tracked-count');
       count.textContent = String(Number(count.textContent) + 1);
       document.getElementById('watch-count').textContent = count.textContent;
