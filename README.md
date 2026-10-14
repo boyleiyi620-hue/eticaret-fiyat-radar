@@ -1,62 +1,41 @@
 # Fiyat Radar
 
-Ücretsiz, statik bir fiyat takip arayüzü. Fiyat akışındaki ürünler demo verisidir; gerçek pazaryeri fiyat takibi için pazaryerlerinin yetkili API'leri ve sunucu entegrasyonu gerekir.
+Amazon Türkiye, Trendyol, Hepsiburada ve n11’de bulduğun ürün ilanlarını tek listede karşılaştıran ücretsiz bir web uygulaması. **Sahte/demo fiyat içermez.** Her fiyat kullanıcı tarafından mağaza sayfasında görülüp kaydedilir; en düşük fiyat, en yüksek fiyat ve farkı uygulama otomatik hesaplar.
 
-## Yerelde çalıştırma
+## Ürün arama ve fiyat karşılaştırma
 
-Supabase Auth ve servis çalışanı `file://` adresinde çalışmaz. Projeyi yerel bir web sunucusuyla açın:
+Bir ürünü eklediğinde kartındaki mağaza bağlantıları aynı ürün adını ilgili mağazanın gerçek arama sayfasında arar. İlanın satıcısını, ürün varyantını, kargo ücretini ve güncel fiyatını mağazada kontrol et; sonra ürün bağlantısı ve fiyatı kaydet. Aynı ürün için mağazalardan yeni fiyatlar eklendikçe ana ekrandaki karşılaştırma güncellenir. Fiyatlar otomatik yenilenmez; eski fiyatların yanında kayıt zamanı görünür.
+
+Bu dört mağazanın ücretsiz, herkese açık ve tüketici kataloğundaki tüm satıcı fiyatlarını arayan bir API’si bu uygulama için mevcut değil. Mağaza API’leri çoğunlukla satıcı/iş ortağı katalog, sipariş veya entegrasyon işlemlerine yöneliktir. Amazon Creators API için Associates üyeliği ve son 30 günde en az 10 nitelikli satış gerekir. Yetkisiz web kazıma, ücretli arama API’si ve AI tarafından uydurulmuş fiyat kullanılmaz. Bu nedenle mağaza API anahtarları istenmez.
+
+Resmî kaynaklar:
+- [Amazon Creators API](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction)
+- [Trendyol Marketplace API](https://developers.trendyol.com/v3.0/docs/getting-started-1)
+- [Hepsiburada Developer Portal](https://developers.hepsiburada.com/tr)
+- [n11 Developer Portal](https://developer.n11.com/)
+
+## Yerel çalıştırma
 
 ```sh
 python3 -m http.server 8000
 ```
 
-Ardından `http://localhost:8000` adresine gidin. E-posta/şifre ile hesap oluşturmak veya giriş yapmak için Supabase bağlantısı gerekir. Google ile giriş yoktur.
+Ardından `http://localhost:8000` adresini aç. Yerel testte Gemini isteği doğrudan Google API’ye gider. Vercel dağıtımında aynı kaynaklı `/api/gemini` işlevi kullanılır.
 
-## Supabase Auth ve takip listesi
+## Supabase
 
-Uygulama Supabase'in ücretsiz Auth altyapısını ve `tracked_products` tablosunu kullanır. Takip listesi özelliklerini etkinleştirmek için Supabase SQL Editor'da aşağıdaki şemayı bir kez çalıştırın. Row Level Security (RLS), her hesabın yalnızca kendi ürünlerini okumasını, eklemesini ve silmesini sağlar.
+Uygulama bağlı ücretsiz Supabase projesinin Auth hizmetini, `tracked_products` tablosunu ve `marketplace_offers` tablosunu kullanır. Her iki tabloda Row Level Security etkin ve kayıtlar yalnızca oturum açmış sahibine görünür. İlan/fiyat tablosunun şeması `supabase/migrations/20261015000000_marketplace_offers.sql` dosyasındadır. Tarayıcıda yalnızca herkese açık Supabase publishable anahtarı bulunur; service-role anahtarı kullanılmaz.
 
-```sql
-create table if not exists public.tracked_products (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
-  title text not null check (char_length(title) between 1 and 200),
-  product_url text not null check (char_length(product_url) <= 2048),
-  target_price numeric(12, 2) check (target_price is null or target_price > 0),
-  created_at timestamptz not null default now()
-);
+Supabase Auth e-posta doğrulama bağlantısı için yayımlanan site adresi izin verilen yönlendirme adresleri arasında olmalıdır.
 
-create index if not exists tracked_products_user_created_idx
-  on public.tracked_products (user_id, created_at desc);
+## Ücretsiz Gemini sohbeti ve video storyboard’u
 
-alter table public.tracked_products enable row level security;
-grant select, insert, delete on public.tracked_products to authenticated;
+Ayarlar’da [Google AI Studio](https://aistudio.google.com/apikey) üzerinden aldığın API anahtarını girip doğrula. Uygulama yalnızca `gemini-3.5-flash-lite` modelini kullanır; ücretli modele, Google Search grounding’e veya ücretli video hizmetine geçmez. Google’ın ücretsiz kota, model erişimi ve bölgesel kullanılabilirlik sınırları geçerlidir.
 
-drop policy if exists "Users can read their own tracked products" on public.tracked_products;
-create policy "Users can read their own tracked products"
-  on public.tracked_products for select to authenticated
-  using ((select auth.uid()) = user_id);
+Anahtar yalnızca açık sekmenin belleğinde tutulur. Yayımlanmış sürümde istek süresince Vercel işlevine iletilir; uygulama anahtarı kaydetmez veya loglamaz. Yazdığın mesajlar Google Gemini API’sine gönderilir. Sohbet kaydedilmiş fiyatları bağlam olarak kullanabilir; mağazaları gerçek zamanlı tarayamaz.
 
-drop policy if exists "Users can add their own tracked products" on public.tracked_products;
-create policy "Users can add their own tracked products"
-  on public.tracked_products for insert to authenticated
-  with check ((select auth.uid()) = user_id);
+Video stüdyosu Gemini’den metinsel storyboard alabilir ve tarayıcıda sessiz, hareketli metinlerden WebM videosu oluşturabilir. Bu, gerçekçi AI video/görüntü üretimi değildir; dışa aktarma tarayıcının `MediaRecorder` desteğine bağlıdır.
 
-drop policy if exists "Users can delete their own tracked products" on public.tracked_products;
-create policy "Users can delete their own tracked products"
-  on public.tracked_products for delete to authenticated
-  using ((select auth.uid()) = user_id);
-```
+## Yayınlama
 
-İstemci tarafında yalnızca Supabase publishable anahtarı bulunur; bu statik uygulamaya secret/service-role anahtarı eklemeyin. Supabase Auth **Site URL** ve izin verilen yönlendirme adreslerini yayımlanan siteyle (yerel test için `http://localhost:8000`) eşleştirin.
-
-## Ücretsiz Gemini AI
-
-1. [Google AI Studio API Keys](https://aistudio.google.com/api-keys) sayfasından Gemini API için bir anahtar oluşturun.
-2. Uygulamada **Ayarlar → AI kategori taraması** alanına anahtarı girip **API anahtarını doğrula ve bağla** düğmesine basın. Uygulama anahtarı URL'de değil x-goog-api-key başlığında gönderir ve sohbet/video ile aynı Gemini modeline kısa bir istek yaparak erişimi doğrular. Anahtar yalnızca açık sekmenin belleğinde tutulur.
-3. **AI asistan** ile sohbet edin veya **Video stüdyosu → AI ile sahne taslağı oluştur** ile AI storyboard'u hazırlayın. Ardından storyboard'u sessiz WebM animasyonuna dönüştürmek için **Videoyu oluştur ve indir** düğmesine basın. Bu özellik gerçekçi AI video/görüntüsü üretmez.
-
-403 erişim hatası alırsanız AI Studio'daki **API Keys** sayfasında anahtarın Gemini API için oluşturulduğunu kontrol edin. Google, 2026'dan itibaren yeni AI Studio anahtarlarını yetkilendirme anahtarı olarak oluşturur ve kısıtlanmamış eski standart anahtarları reddedebilir. Google Cloud Console'da anahtar için API kısıtlaması ayarlandıysa **Generative Language API** erişimine izin verin. 429 hatası ücretsiz kullanım kotasının dolduğunu gösterebilir.
-API istekleri ve yazdığınız mesajlar Google Gemini'ye gönderilir. Anahtar tarayıcı depolamasına yazılmaz; yalnızca açık sekmenin belleğinde tutulur. Google'ın ücretsiz kota, model erişimi ve kullanım koşulları zamanla değişebilir. Bu, üretim ortamında güvenli bir API anahtarı saklama yöntemi değildir; herkese açık bir uygulamada anahtarı sunucu tarafında koruyun ve kullanıcı başına erişimi sınırlandırın. API anahtarını herkese açık veya ortak cihazlarda kullanmayın.
-
-Video stüdyosu storyboard'u hareketli tasarım metinlerine dönüştürür ve WebM olarak dışa aktarır. Ücretsiz/çevrimdışı örnek storyboard da kullanılabilir. Gerçekçi AI video üretimi yapmaz; ücretli video üretim servislerine istek göndermez.
+Depo Vercel Hobby (ücretsiz) hesabına bağlıdır. Statik uygulama ve `api/gemini.js` aynı dağıtımda yayınlanır. Supabase/Vercel kota ve ücretsiz plan sınırları geçerlidir; ücretli servis veya ücretli mağaza API’si eklenmemiştir.
